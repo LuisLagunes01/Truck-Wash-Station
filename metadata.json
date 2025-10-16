@@ -1,0 +1,7 @@
+{
+  "name": "CHECK LIST NUEVA",
+  "description": "APP DE TRUCK WASH",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
