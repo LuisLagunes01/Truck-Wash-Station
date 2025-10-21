@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { CustomerData, Quotation, VehicleSelection, Trailer, TrailerType, ChecklistSection, ChecklistStep, PriceList, LightVehicleSelection, Vehicle, VehicleType, QuotationPrefix, CamionUnitarioSelection, CamionUnitarioType } from './types';
-import { DEFAULT_PRICE_LIST, SAFETY_GENERAL, SAFETY_CISTERNA, CHECKLIST_MAPPING } from './constants';
+import { DEFAULT_PRICE_LIST, SAFETY_GENERAL, CHECKLIST_MAPPING } from './constants';
 
 // FIX: Replaced the previously broken Base64 string with a clean, reliable SVG icon to ensure the logo always displays correctly.
 const TRUCK_ICON_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231A3B4A'%3E%3Cpath d='M20.5 13.5C21.3284 13.5 22 12.8284 22 12C22 11.1716 21.3284 10.5 20.5 10.5H19V8.5C19 7.67157 18.3284 7 17.5 7H14V3.5C14 2.67157 13.3284 2 12.5 2H4.5C3.67157 2 3 2.67157 3 3.5V16.5C3 17.3284 3.67157 18 4.5 18H7.5C7.5 19.6569 8.84315 21 10.5 21C12.1569 21 13.5 19.6569 13.5 18H16.5C16.5 19.6569 17.8431 21 19.5 21C21.1569 21 22.5 19.6569 22.5 18H23V16.5C23 14.8431 21.6569 13.5 20.5 13.5ZM10.5 19.5C9.67157 19.5 9 18.8284 9 18C9 17.1716 9.67157 16.5 10.5 16.5C11.3284 16.5 12 17.1716 12 18C12 18.8284 11.3284 19.5 10.5 19.5ZM19.5 19.5C18.6716 19.5 18 18.8284 18 18C18 17.1716 18.6716 16.5 19.5 16.5C20.3284 16.5 21 17.1716 21 18C21 18.8284 20.3284 19.5 19.5 19.5ZM17.5 15H14.2121C13.8213 15.632 13.203 16.1363 12.4856 16.4468C11.9787 16.1471 11.5312 15.7497 11.1818 15.2829L11.1712 15H4.5V3.5H12.5V15H13.5V8.5H17.5V15Z'/%3E%3C/svg%3E`;
@@ -282,8 +282,8 @@ const CustomerRegistrationForm: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.customerName.fullName || !formData.billingInfo.rfc) {
-      setFormError('Razón Social y RFC son campos obligatorios.');
+    if (!formData.customerName.fullName && !formData.billingInfo.rfc) {
+      setFormError('Se requiere Razón Social o RFC.');
       return;
     }
     const newCustomer: CustomerData = {
@@ -345,8 +345,8 @@ const CustomerRegistrationForm: React.FC<{
         <fieldset className="space-y-4 p-4 border rounded-lg" disabled={isLoading}>
           <legend className="text-lg font-semibold px-2">Datos Generales y de Facturación</legend>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" name="customerName.fullName" value={formData.customerName.fullName} onChange={handleInputChange} placeholder="* Razón Social / Nombre Completo" required className="w-full p-3 border border-gray-300 rounded-lg md:col-span-2" aria-label="Razón Social o Nombre Completo" />
-            <input type="text" name="billingInfo.rfc" value={formData.billingInfo.rfc} onChange={handleInputChange} placeholder="* RFC" required className="w-full p-3 border border-gray-300 rounded-lg" aria-label="RFC" />
+            <input type="text" name="customerName.fullName" value={formData.customerName.fullName} onChange={handleInputChange} placeholder="Razón Social (Requerido si no hay RFC)" className="w-full p-3 border border-gray-300 rounded-lg md:col-span-2" aria-label="Razón Social o Nombre Completo" />
+            <input type="text" name="billingInfo.rfc" value={formData.billingInfo.rfc} onChange={handleInputChange} placeholder="RFC (Requerido si no hay Razón Social)" className="w-full p-3 border border-gray-300 rounded-lg" aria-label="RFC" />
             <input type="text" name="billingInfo.taxRegime" value={formData.billingInfo.taxRegime} onChange={handleInputChange} placeholder="Régimen Fiscal" className="w-full p-3 border border-gray-300 rounded-lg" aria-label="Régimen Fiscal" />
             <input type="email" name="contact.email" value={formData.contact.email || ''} onChange={handleInputChange} placeholder="Email de Contacto" className="w-full p-3 border border-gray-300 rounded-lg" aria-label="Email de Contacto" />
             <input type="tel" name="contact.phone" value={formData.contact.phone || ''} onChange={handleInputChange} placeholder="Teléfono de Contacto" className="w-full p-3 border border-gray-300 rounded-lg" aria-label="Teléfono de Contacto" />
@@ -366,7 +366,7 @@ const CustomerRegistrationForm: React.FC<{
           </div>
         </fieldset>
         {formError && <p className="text-red-600 text-center" role="alert">{formError}</p>}
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg" style={{ display: 'none' }} />
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, application/pdf" style={{ display: 'none' }} />
         <div className="text-center pt-2 flex flex-col sm:flex-row justify-center items-center gap-4 flex-wrap">
           <button type="submit" disabled={isLoading} className="btn-primary w-full sm:w-auto disabled:opacity-50">Registrar Cliente</button>
           <button type="button" onClick={onContinueWithoutClient} disabled={isLoading} className="btn-secondary w-full sm:w-auto disabled:opacity-50">Continuar sin Registrar</button>
@@ -464,11 +464,12 @@ const SearchComponent: React.FC<{
 const CustomerProfile: React.FC<{
   customer: CustomerData,
   quotations: Quotation[],
-  onNavigate: (view: 'quotation' | 'serviceOrder') => void,
+  onCreateNew: (view: 'quotation' | 'serviceOrder') => void,
+  onViewQuotation: (quotation: Quotation) => void,
   onDeleteCustomer: (customerId: string) => void,
   onDeleteQuotation: (quotationId: string) => void,
   onGoBack: () => void
-}> = ({ customer, quotations, onNavigate, onDeleteCustomer, onDeleteQuotation, onGoBack }) => {
+}> = ({ customer, quotations, onCreateNew, onViewQuotation, onDeleteCustomer, onDeleteQuotation, onGoBack }) => {
 
   const customerQuotations = useMemo(() => {
     return quotations.filter(q => q.customerId === customer.id);
@@ -502,10 +503,10 @@ const CustomerProfile: React.FC<{
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4 border-t">
-        <button onClick={() => onNavigate('quotation')} className="btn-primary !text-xl !py-4 !px-8 w-full sm:w-auto">
+        <button onClick={() => onCreateNew('quotation')} className="btn-primary !text-xl !py-4 !px-8 w-full sm:w-auto">
           Crear Cotización
         </button>
-        <button onClick={() => onNavigate('serviceOrder')} className="btn-primary !bg-green-600 hover:!bg-green-800 !text-xl !py-4 !px-8 w-full sm:w-auto">
+        <button onClick={() => onCreateNew('serviceOrder')} className="btn-primary !bg-green-600 hover:!bg-green-800 !text-xl !py-4 !px-8 w-full sm:w-auto">
           Crear Orden de Servicio
         </button>
       </div>
@@ -517,10 +518,11 @@ const CustomerProfile: React.FC<{
                 <div key={quote.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center gap-2 flex-wrap">
                     <div>
                         <p className="font-semibold">{quote.id}</p>
-                        <p className="text-sm text-gray-600">Fecha: {new Date(quote.createdAt).toLocaleDateString()}</p>
+                        <p className="text-sm text-gray-600">Fecha: {new Date(quote.date).toLocaleDateString()}</p>
                         <p className="text-sm text-gray-600">Total: ${quote.total.toFixed(2)}</p>
                     </div>
                     <div className="flex gap-2">
+                        <button onClick={() => onViewQuotation(quote)} className="btn-primary !bg-green-600 hover:!bg-green-800 !py-1 !px-3">Ver / Usar</button>
                         <button onClick={() => handleDeleteQuotation(quote.id)} className="btn-secondary !bg-red-600 hover:!bg-red-800 !py-1 !px-3">Eliminar</button>
                     </div>
                 </div>
@@ -542,15 +544,17 @@ const CustomerProfile: React.FC<{
 const QuotationTool: React.FC<{ 
   customer: CustomerData,
   priceList: PriceList,
-  initialSelection?: VehicleSelection,
+  initialQuotation?: Quotation,
   onSave: (quotation: Quotation) => void,
-  onGenerateOrder: (selection: VehicleSelection) => void,
+  onGenerateOrder: (selection: VehicleSelection, vehicleInfo?: Omit<Vehicle, 'id'>) => void,
   onGoBack: () => void
-}> = ({ customer, priceList, initialSelection = initialVehicleSelection, onSave, onGenerateOrder, onGoBack }) => {
-  const [selection, setSelection] = useState<VehicleSelection>(initialSelection);
-  const [trailerCount, setTrailerCount] = useState(initialSelection.trailers.length);
+}> = ({ customer, priceList, initialQuotation, onSave, onGenerateOrder, onGoBack }) => {
+  const [selection, setSelection] = useState<VehicleSelection>(initialQuotation?.vehicleSelection || initialVehicleSelection);
+  const [trailerCount, setTrailerCount] = useState(initialQuotation?.vehicleSelection.trailers.length || 0);
   const [activeTab, setActiveTab] = useState<'tractocamion' | 'lightVehicles' | 'trucks'>('tractocamion');
   const [isSaving, setIsSaving] = useState(false);
+  const [quotationDate, setQuotationDate] = useState(() => initialQuotation ? new Date(initialQuotation.date).toISOString().substring(0, 10) : new Date().toISOString().substring(0, 10));
+  const [vehicleInfo, setVehicleInfo] = useState(initialQuotation?.vehicleInfo || { type: 'Tractor' as VehicleType, make: '', model: '', plates: '', color: '', kms: '' });
 
   const total = useMemo(() => {
     let currentTotal = 0;
@@ -640,6 +644,10 @@ const QuotationTool: React.FC<{
     ...s, camionUnitarioSelection: { ...s.camionUnitarioSelection, services: { ...s.camionUnitarioSelection.services, [service]: value } }
   }));
 
+    const handleVehicleInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setVehicleInfo(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
   const handleSaveQuotation = () => {
     setIsSaving(true);
     let prefix: QuotationPrefix = 'COT-TRACTO';
@@ -647,7 +655,13 @@ const QuotationTool: React.FC<{
     else if (activeTab === 'trucks') prefix = 'COT-CAMION';
 
     const newQuotation: Quotation = {
-      id: `${prefix}-${Date.now()}`, customerId: customer.id, vehicleSelection: selection, createdAt: new Date(), total, type: prefix
+      id: `${prefix}-${Date.now()}`, 
+      customerId: customer.id, 
+      vehicleSelection: selection, 
+      date: new Date(quotationDate), 
+      total, 
+      type: prefix,
+      vehicleInfo: vehicleInfo.make || vehicleInfo.plates ? vehicleInfo : undefined,
     };
     onSave(newQuotation);
     alert(`Cotización ${newQuotation.id} guardada con un total de $${total.toFixed(2)}.`);
@@ -673,9 +687,12 @@ const QuotationTool: React.FC<{
           if(lightVehicleSelection.package !== 'ninguno') {
               services.push({ description: `Paquete ${lightVehicleSelection.package} - ${lightVehicleSelection.vehicleType} ${lightVehicleSelection.vehicleSize}`, price: priceList.lightVehicle.packages[lightVehicleSelection.vehicleType][lightVehicleSelection.vehicleSize][lightVehicleSelection.package] });
           }
-          Object.entries(lightVehicleSelection.aLaCarta).forEach(([key, value]) => {
-              if(value) services.push({ description: `A la Carta: ${key.replace(/([A-Z])/g, ' $1')}`, price: priceList.lightVehicle.aLaCarta[key as keyof typeof priceList.lightVehicle.aLaCarta] });
-          });
+// FIX: Replaced Object.entries with a type-safe Object.keys iteration to prevent a TypeScript error where the key was being inferred as a generic 'string' instead of a specific literal type.
+(Object.keys(lightVehicleSelection.aLaCarta) as (keyof typeof lightVehicleSelection.aLaCarta)[]).forEach(key => {
+    if (lightVehicleSelection.aLaCarta[key]) {
+        services.push({ description: `A la Carta: ${String(key).replace(/([A-Z])/g, ' $1')}`, price: priceList.lightVehicle.aLaCarta[key] });
+    }
+});
       } else if (activeTab === 'trucks' && camionUnitarioSelection && camionUnitarioSelection.type) {
         const prices = priceList.camionUnitario[camionUnitarioSelection.type];
         const typeName = camionUnitarioSelection.type.replace(/([A-Z0-9])/g, ' $1').replace('rabon', 'Rabon').replace('torton', 'Torton');
@@ -697,7 +714,7 @@ const QuotationTool: React.FC<{
                         <p><strong>RFC:</strong> {customer.billingInfo.rfc}</p>
                     </div>
                     <div>
-                        <p><strong>Fecha:</strong> {new Date().toLocaleDateString('es-MX')}</p>
+                        <p><strong>Fecha:</strong> {new Date(quotationDate).toLocaleDateString('es-MX')}</p>
                         <p><strong>ID Cotización (Temporal):</strong> QT-{Date.now()}</p>
                     </div>
                 </div>
@@ -707,7 +724,51 @@ const QuotationTool: React.FC<{
                     <h2 className="section-title">Cotizador de Servicios</h2>
                     <button onClick={onGoBack} className="btn-secondary ml-4">Regresar</button>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4 no-print">
+                    <div>
+                        <label htmlFor="quotationDate" className="block text-sm font-medium text-gray-700">Fecha de Cotización</label>
+                        <input type="date" id="quotationDate" value={quotationDate} onChange={e => setQuotationDate(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                    </div>
+                </div>
                 
+                <details className="p-4 border rounded-lg bg-gray-50 my-4 no-print">
+                    <summary className="text-lg font-bold text-gray-800 cursor-pointer">Datos del Vehículo (Opcional)</summary>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Tipo de Vehículo</label>
+                            <select name="type" value={vehicleInfo.type} onChange={handleVehicleInfoChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                                <option value="Tractor">Tractor</option>
+                                <option value="Remolque">Remolque</option>
+                                <option value="Camion">Camión</option>
+                                <option value="Auto">Auto</option>
+                                <option value="Pickup">Pickup</option>
+                                <option value="Camioneta">Camioneta</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Marca</label>
+                            <input type="text" name="make" value={vehicleInfo.make} onChange={handleVehicleInfoChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Modelo</label>
+                            <input type="text" name="model" value={vehicleInfo.model} onChange={handleVehicleInfoChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Placas</label>
+                            <input type="text" name="plates" value={vehicleInfo.plates} onChange={handleVehicleInfoChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Color</label>
+                            <input type="text" name="color" value={vehicleInfo.color} onChange={handleVehicleInfoChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">KMS</label>
+                            <input type="text" name="kms" value={vehicleInfo.kms} onChange={handleVehicleInfoChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                        </div>
+                    </div>
+                </details>
+
                 <div className="border-b border-gray-200 no-print">
                     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                         <button onClick={() => setActiveTab('tractocamion')} className={`${activeTab === 'tractocamion' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>Tractor y Remolques</button>
@@ -819,10 +880,11 @@ const QuotationTool: React.FC<{
                            <fieldset className="p-4 border rounded-lg bg-gray-50 no-print">
                                 <legend className="text-lg font-bold text-gray-800 px-2">A la Carta</legend>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                                    {Object.keys(selection.lightVehicleSelection.aLaCarta).map(key => (
+                                    {/* FIX: Cast the result of Object.keys to the specific key types to ensure type safety. */}
+                                    {(Object.keys(selection.lightVehicleSelection.aLaCarta) as (keyof typeof selection.lightVehicleSelection.aLaCarta)[]).map(key => (
                                         <label key={key} className="flex items-center space-x-3 cursor-pointer text-base">
-                                            <input type="checkbox" checked={selection.lightVehicleSelection?.aLaCarta[key as keyof typeof selection.lightVehicleSelection.aLaCarta]} onChange={e => handleLightVehicleAlaCartaChange(key as keyof typeof selection.lightVehicleSelection.aLaCarta, e.target.checked)} className="h-5 w-5 rounded"/>
-                                            <span>{key.replace(/([A-Z])/g, ' $1')} (${priceList.lightVehicle.aLaCarta[key as keyof typeof priceList.lightVehicle.aLaCarta]})</span>
+                                            <input type="checkbox" checked={selection.lightVehicleSelection.aLaCarta[key]} onChange={e => handleLightVehicleAlaCartaChange(key, e.target.checked)} className="h-5 w-5 rounded"/>
+                                            <span>{key.replace(/([A-Z])/g, ' $1')} (${priceList.lightVehicle.aLaCarta[key]})</span>
                                         </label>
                                     ))}
                                 </div>
@@ -850,9 +912,10 @@ const QuotationTool: React.FC<{
                            <fieldset className="p-4 border rounded-lg bg-gray-50 no-print">
                                 <legend className="text-lg font-bold text-gray-800 px-2">Servicios para Camión</legend>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-                                    {Object.keys(selection.camionUnitarioSelection.services).map(key => (
+                                    {/* FIX: Cast the result of Object.keys to the specific key types to ensure type safety and prevent TypeScript errors when accessing object properties or passing keys as function arguments. */}
+                                    {(Object.keys(selection.camionUnitarioSelection.services) as (keyof typeof selection.camionUnitarioSelection.services)[]).map(key => (
                                         <label key={key} className="flex items-center space-x-3 cursor-pointer text-base">
-                                            <input type="checkbox" checked={selection.camionUnitarioSelection.services[key as keyof typeof selection.camionUnitarioSelection.services]} onChange={e => handleCamionUnitarioServiceChange(key as keyof typeof selection.camionUnitarioSelection.services, e.target.checked)} className="h-5 w-5 rounded" disabled={!selection.camionUnitarioSelection.type}/>
+                                            <input type="checkbox" checked={selection.camionUnitarioSelection.services[key]} onChange={e => handleCamionUnitarioServiceChange(key, e.target.checked)} className="h-5 w-5 rounded" disabled={!selection.camionUnitarioSelection.type}/>
                                             <span className="capitalize">{key}</span>
                                         </label>
                                     ))}
@@ -888,7 +951,7 @@ const QuotationTool: React.FC<{
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 no-print">
                     <button onClick={handleSaveQuotation} disabled={isSaving} className="btn-primary !bg-gray-600 hover:!bg-gray-800 w-full sm:w-auto disabled:opacity-50">Guardar Cotización</button>
                     <button onClick={() => handlePrint('printable-quotation')} className="btn-primary !bg-blue-600 hover:!bg-blue-800 w-full sm:w-auto">Imprimir Cotización</button>
-                    <button onClick={() => onGenerateOrder(selection)} className="btn-primary w-full sm:w-auto">Generar Orden de Servicio</button>
+                    <button onClick={() => onGenerateOrder(selection, (vehicleInfo.make || vehicleInfo.plates) ? vehicleInfo : undefined)} className="btn-primary w-full sm:w-auto">Generar Orden de Servicio</button>
                     </div>
                 </div>
             </main>
@@ -907,10 +970,6 @@ const ChecklistComponent: React.FC<{ vehicleSelection: VehicleSelection }> = ({ 
         if(!vehicleSelection.trailers || vehicleSelection.trailers.length === 0) return checklist;
 
         checklist.push(SAFETY_GENERAL);
-        const hasCisterna = vehicleSelection.trailers.some(t => t.type === 'Pipa / Cilindro Estándar' || t.type === 'Pipa / Cilindro Chica');
-        if (hasCisterna) {
-            checklist.push(SAFETY_CISTERNA);
-        }
 
         vehicleSelection.trailers.forEach((trailer, index) => {
             if (trailer.type) {
@@ -993,14 +1052,16 @@ const ChecklistComponent: React.FC<{ vehicleSelection: VehicleSelection }> = ({ 
 const ServiceOrder: React.FC<{
     customer: CustomerData, 
     vehicleSelection: VehicleSelection | null, 
-    priceList: PriceList, 
+    priceList: PriceList,
+    vehicleInfo: Omit<Vehicle, 'id'> | null,
     onUpdateCustomer: (customer: CustomerData) => void,
     onGoBack: () => void
-}> = ({ customer, vehicleSelection, priceList, onUpdateCustomer, onGoBack }) => {
+}> = ({ customer, vehicleSelection, priceList, onUpdateCustomer, onGoBack, vehicleInfo }) => {
     const [technicianData, setTechnicianData] = useState({ name: '', area: '', phone: '' });
-    const [vehicleData, setVehicleData] = useState({ type: 'Tractor' as VehicleType, make: '', model: '', plates: '', color: '', kms: '' });
+    const [vehicleData, setVehicleData] = useState(() => vehicleInfo || { type: 'Tractor' as VehicleType, make: '', model: '', plates: '', color: '', kms: '' });
     const inventoryItems = useMemo(() => ['Encendedor', 'Extinguidor', 'Llanta de Refacción', 'Antena', 'Tapetes', 'Herramientas', 'Gato', 'Tapones de Rueda', 'Tapón de Combustible', 'Señales', 'Llave de Maneral', 'Espejos Laterales', 'Radio / Stereo', 'Pasa corriente', 'Birlo de Seguridad', 'Limpiadores'], []);
     const [inventory, setInventory] = useState<Record<string, boolean>>(() => inventoryItems.reduce((acc, item) => ({...acc, [item]: false}), {}));
+    const [vehicleCondition, setVehicleCondition] = useState('');
 
     const handleInventoryChange = (item: string) => {
         setInventory(prev => ({...prev, [item]: !prev[item]}));
@@ -1148,11 +1209,15 @@ const ServiceOrder: React.FC<{
                         ))}
                         </div>
                     </div>
-                    <div className="border border-black p-2 flex flex-col items-center justify-center">
+                    <div className="border border-black p-2 flex flex-col">
                         <h3 className="font-bold text-center mb-2">Estado del Vehículo (Marcar daños)</h3>
-                        <div className="w-full h-32 bg-gray-200 rounded flex items-center justify-center">
-                        <p className="text-gray-500 text-sm">Diagramas de vehículo aquí</p>
-                        </div>
+                        <textarea
+                            value={vehicleCondition}
+                            onChange={(e) => setVehicleCondition(e.target.value)}
+                            rows={5}
+                            placeholder="Describa aquí cualquier daño, rayón, o condición especial del vehículo..."
+                            className="w-full h-full bg-gray-50 rounded p-2 text-sm flex-grow"
+                        ></textarea>
                     </div>
                 </section>
 
@@ -1321,7 +1386,9 @@ function App() {
   const [customerData, setCustomerData] = useState<CustomerData | null>(null);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [activeVehicleSelection, setActiveVehicleSelection] = useState<VehicleSelection | null>(null);
+  const [activeQuotation, setActiveQuotation] = useState<Quotation | null>(null);
   const [priceList, setPriceList] = useState<PriceList>(DEFAULT_PRICE_LIST);
+  const [activeVehicleInfo, setActiveVehicleInfo] = useState<Omit<Vehicle, 'id'> | null>(null);
   
   useEffect(() => {
     const savedPrices = localStorage.getItem('appPriceList');
@@ -1347,8 +1414,23 @@ function App() {
   const currentView = viewHistory[viewHistory.length - 1];
 
   const handleRegister = (data: CustomerData) => {
-    setCustomers(prev => [...prev.filter(c => c.id !== data.id), data]);
-    setCustomerData(data);
+    const cleanedData = JSON.parse(JSON.stringify(data));
+
+    const fillEmpty = (obj: any) => {
+        if (!obj || Array.isArray(obj)) return;
+        Object.keys(obj).forEach(key => {
+            if (key === 'vehicles' || key === 'id') return;
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                fillEmpty(obj[key]);
+            } else if (obj[key] === '' || obj[key] === null) {
+                obj[key] = 'N/A';
+            }
+        });
+    };
+
+    fillEmpty(cleanedData);
+    setCustomers(prev => [...prev.filter(c => c.id !== cleanedData.id), cleanedData]);
+    setCustomerData(cleanedData);
     setViewHistory(prev => [...prev, 'customerProfile']);
   };
   
@@ -1361,6 +1443,7 @@ function App() {
     };
     setCustomerData(generalCustomer);
     setActiveVehicleSelection(null);
+    setActiveQuotation(null);
     setViewHistory(prev => [...prev, 'customerProfile']);
   };
 
@@ -1377,6 +1460,7 @@ function App() {
     };
     setCustomerData(generalCustomer);
     setActiveVehicleSelection(null);
+    setActiveQuotation(null);
     setViewHistory(['home', 'quotation']);
   };
 
@@ -1390,23 +1474,37 @@ function App() {
     setQuotations(prev => [...prev.filter(q => q.id !== quotation.id), quotation]);
   };
   
-  const handleGenerateOrder = (selection: VehicleSelection) => {
+  const handleGenerateOrder = (selection: VehicleSelection, vehicleInfo?: Omit<Vehicle, 'id'>) => {
     setActiveVehicleSelection(selection);
+    setActiveVehicleInfo(vehicleInfo || null);
     setViewHistory(prev => [...prev, 'serviceOrder']);
   };
   
   const handleSelectCustomer = (customer: CustomerData) => {
     setCustomerData(customer);
     setActiveVehicleSelection(null);
+    setActiveQuotation(null);
     setViewHistory(prev => [...prev, 'customerProfile']);
   };
   
   const handleViewQuotation = (quotation: Quotation) => {
     const customer = customers.find(c => c.id === quotation.customerId);
-    if(customer) {
-        setCustomerData(customer);
-        setActiveVehicleSelection(quotation.vehicleSelection);
-        setViewHistory(prev => [...prev, 'customerProfile', 'quotation']);
+    const generalCustomer: CustomerData = {
+        id: 'CUST-GENERAL', ...initialCustomerData,
+        customerName: { ...initialCustomerData.customerName, fullName: 'Cliente General' },
+        billingInfo: { ...initialCustomerData.billingInfo, rfc: 'XAXX010101000' }
+    };
+    const targetCustomer = customer || (quotation.customerId === 'CUST-GENERAL' ? generalCustomer : null);
+
+    if(targetCustomer) {
+        setCustomerData(targetCustomer);
+        setActiveQuotation(quotation);
+        const newHistory = [...viewHistory];
+        if (newHistory[newHistory.length - 1] !== 'customerProfile') {
+            newHistory.push('customerProfile');
+        }
+        newHistory.push('quotation');
+        setViewHistory(newHistory);
     } else {
         alert('No se encontró el cliente para esta cotización.')
     }
@@ -1456,7 +1554,8 @@ function App() {
           return <CustomerProfile 
             customer={customerData} 
             quotations={quotations}
-            onNavigate={(v) => { setActiveVehicleSelection(null); setViewHistory(prev => [...prev, v]); }} 
+            onCreateNew={(v) => { setActiveVehicleSelection(null); setActiveQuotation(null); setActiveVehicleInfo(null); setViewHistory(prev => [...prev, v]); }} 
+            onViewQuotation={handleViewQuotation}
             onDeleteCustomer={handleDeleteCustomer}
             onDeleteQuotation={handleDeleteQuotation}
             onGoBack={handleGoBack} 
@@ -1465,12 +1564,12 @@ function App() {
         break;
       case 'quotation':
         if (customerData) {
-          return <QuotationTool customer={customerData} priceList={priceList} initialSelection={activeVehicleSelection || undefined} onSave={handleSaveQuotation} onGenerateOrder={handleGenerateOrder} onGoBack={handleGoBack} />;
+          return <QuotationTool customer={customerData} priceList={priceList} initialQuotation={activeQuotation || undefined} onSave={handleSaveQuotation} onGenerateOrder={handleGenerateOrder} onGoBack={handleGoBack} />;
         }
         break;
       case 'serviceOrder':
          if (customerData) {
-          return <ServiceOrder customer={customerData} vehicleSelection={activeVehicleSelection} priceList={priceList} onUpdateCustomer={handleUpdateCustomer} onGoBack={handleGoBack} />;
+          return <ServiceOrder customer={customerData} vehicleSelection={activeVehicleSelection} priceList={priceList} onUpdateCustomer={handleUpdateCustomer} onGoBack={handleGoBack} vehicleInfo={activeVehicleInfo} />;
         }
         break;
       default:

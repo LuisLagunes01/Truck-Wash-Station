@@ -42,7 +42,7 @@ export interface Vehicle {
 
 
 export interface CustomerData {
-  id: string;
+  id:string;
   customerName: CustomerName;
   billingInfo: BillingInfo;
   address: Address;
@@ -116,9 +116,10 @@ export interface Quotation {
   id: string;
   customerId: string;
   vehicleSelection: VehicleSelection;
-  createdAt: Date;
+  date: Date;
   total: number;
   type: QuotationPrefix;
+  vehicleInfo?: Omit<Vehicle, 'id'>;
 }
 
 export interface ChecklistStep {

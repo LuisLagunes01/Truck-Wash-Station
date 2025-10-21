@@ -1,4 +1,3 @@
-
 import { ChecklistSection, ChecklistStep, TrailerType, PriceList } from './types';
 
 const createSteps = (labels: string[]): ChecklistStep[] =>
@@ -74,78 +73,161 @@ export const SAFETY_GENERAL: ChecklistSection = {
   ]),
 };
 
-export const SAFETY_CISTERNA: ChecklistSection = {
-  title: '🚨 Seguridad para Lavado Interior de Cisternas',
-  className: 'p-6 rounded-lg bg-yellow-100 border border-yellow-300 mb-6',
-  steps: createSteps([
-    'Monitoreo de LEL (0%) y O2 (19.5%-20.9%) antes de iniciar el lavado interior.',
-    'Verificación de desgasificación del tanque.',
-    'Apertura y ventilación de la cisterna con equipos adecuados.',
-    'EPP Específico: Mascarilla de protección respiratoria con filtro adecuado.',
-    'Disponibilidad: Extintor de incendios cercano y en buen estado.',
-  ]),
-};
-
-
 const COMMON_STEPS = {
-  RECEPTION: { title: '1. Recepción', steps: createSteps(['Inspección visual', 'Verificación de carga previa']) },
-  PREWASH: { title: '2. Prelavado', steps: createSteps(['Aplicación de agua a alta presión', 'Limpieza de bajos']) },
-  WASH: { title: '3. Lavado', steps: createSteps(['Aplicación de detergente/shampoo', 'Cepillado de carrocería y neumáticos']) },
-  ENJUAGUE: { title: '5. Enjuague', steps: createSteps(['Enjuague con agua a presión', 'Enjuague con agua desmineralizada']) },
-  SECADO: { title: '6. Secado', steps: createSteps(['Secado con aire comprimido', 'Aplicación de lubricante en piezas móviles']) },
-  CABINA: { title: '7. Limpieza Cabina', steps: createSteps(['Aspirado y limpieza de cabina']) },
+  RECEPTION: {
+    title: '1. Recepción e Inspección Inicial',
+    steps: createSteps([
+      'Confirmar servicios solicitados con el cliente.',
+      'Inspección visual de 360° del vehículo.',
+      'Fotografiar todos los lados del vehículo, destacando daños preexistentes (rayones, abolladuras).',
+      'Verificar y registrar daños en el formato de Orden de Servicio.',
+      'Revisar si hay objetos personales de valor a la vista y notificar al cliente para que los retire.',
+      'Verificar el tipo de carga previa (si aplica) para determinar químicos a usar.'
+    ])
+  },
+  PREWASH: {
+    title: '2. Prelavado y Descontaminación',
+    steps: createSteps([
+      'Aplicación de agua a alta presión para remover lodo y suciedad superficial.',
+      'Limpieza profunda de chasis, bajos, loderas y rines con agua a presión.',
+      'Aplicación de desengrasante en motor (si se solicitó), chasis y rines.',
+      'Dejar actuar el desengrasante según especificaciones del producto (aprox. 5 min).'
+    ])
+  },
+  WASH: {
+    title: '3. Lavado Exterior Detallado',
+    steps: createSteps([
+      'Aplicación de shampoo o detergente especializado con espumadora para cubrir toda la superficie.',
+      'Cepillado manual de toda la carrocería, empezando de arriba hacia abajo.',
+      'Uso de cepillos suaves para superficies pintadas, emblemas y vidrios.',
+      'Uso de cepillos de cerdas duras para llantas y partes bajas.',
+      'Atención especial a parrilla, defensas y áreas de difícil acceso con cepillos pequeños.'
+    ])
+  },
+  ENJUAGUE: {
+    title: '4. Enjuague Completo',
+    steps: createSteps([
+      'Enjuague completo con agua a presión para retirar todo el producto de limpieza, de arriba hacia abajo.',
+      'Asegurarse de enjuagar bien debajo de los guardabarros, chasis y cavidades.',
+      'Enjuague final con agua desmineralizada (si está disponible) para evitar manchas de sarro.'
+    ])
+  },
+  SECADO: {
+    title: '5. Secado y Acabado',
+    steps: createSteps([
+      'Secado de superficies grandes y vidrios con jaladores de aire de silicón.',
+      'Secado de detalles, manijas, espejos y molduras con toallas de microfibra limpias.',
+      'Uso de aire comprimido para expulsar agua de lugares difíciles.',
+      'Aplicación de abrillantador en llantas y molduras plásticas exteriores.',
+      'Lubricación de bisagras y chapas (si es solicitado).'
+    ])
+  },
+  CABINA: {
+    title: '6. Limpieza de Cabina',
+    steps: createSteps([
+      'Retirar tapetes y sacudirlos o lavarlos según el material.',
+      'Retirar basura general de la cabina.',
+      'Aspirado profundo de asientos, alfombras, piso y debajo de los asientos.',
+      'Limpieza de tablero, consola central y paneles de puertas con producto para interiores.',
+      'Limpieza de vidrios y espejos interiores hasta que queden sin marcas.',
+      'Colocación de tapetes limpios y aromatizante (si el cliente lo aprueba).'
+    ])
+  },
+  INSPECTION: {
+      title: '7. Inspección Final de Calidad',
+      steps: createSteps([
+          'Revisión final de la limpieza exterior, buscando residuos de jabón, manchas o áreas omitidas.',
+          'Revisión de la limpieza interior, asegurando que no haya polvo o basura.',
+          'Verificar que los vidrios estén limpios por dentro y por fuera.',
+          'Confirmar que todos los servicios adicionales solicitados (motor, chasis, etc.) se completaron correctamente.',
+          'Notificar al cliente que el vehículo está listo para la entrega.'
+      ])
+  }
 };
+
 
 export const CHECKLIST_TRACTOR_CAJASECA: ChecklistSection[] = [
   COMMON_STEPS.RECEPTION,
   COMMON_STEPS.PREWASH,
   COMMON_STEPS.WASH,
-  { title: '4. Interior', steps: createSteps(['Procedimiento Específico: Limpieza Interior']) },
+  { title: 'Proceso: Lavado Interior de Caja Seca', steps: createSteps([
+      'Barrido o soplado de residuos sólidos y polvo.',
+      'Lavado a presión de paredes y piso interior con detergente neutro.',
+      'Enjuague completo del interior.',
+      'Dejar puertas abiertas para ventilación y secado.'
+    ])
+  },
   COMMON_STEPS.ENJUAGUE,
   COMMON_STEPS.SECADO,
-  COMMON_STEPS.CABINA
+  COMMON_STEPS.CABINA,
+  COMMON_STEPS.INSPECTION
 ];
 
 export const CHECKLIST_REFRIGERADO: ChecklistSection[] = [
   COMMON_STEPS.RECEPTION,
   COMMON_STEPS.PREWASH,
-  { ...COMMON_STEPS.WASH, steps: [...COMMON_STEPS.WASH.steps, {id: 'desincrustante', label: 'Aplicación de desincrustante'}] },
-  { title: '4. Interior', steps: createSteps(['Procedimiento Específico: Limpieza Interior']) },
+  { ...COMMON_STEPS.WASH, steps: [...COMMON_STEPS.WASH.steps, {id: 'desincrustante-refri', label: 'Aplicación de desincrustante en áreas metálicas si es necesario'}] },
+  { title: 'Proceso: Lavado y Sanitización Interior Caja Refrigerada', steps: createSteps([
+      'Lavado a presión de interior con jabón grado alimenticio.',
+      'Enjuague abundante para eliminar todo residuo.',
+      'Aplicación de solución sanitizante en paredes, piso y techo.',
+      'Dejar actuar el sanitizante por el tiempo especificado.',
+      'Enjuague final (si el producto lo requiere) y secado.',
+    ]) 
+  },
   COMMON_STEPS.ENJUAGUE,
   COMMON_STEPS.SECADO,
   COMMON_STEPS.CABINA,
-  { title: '8. Certificación', steps: createSteps(['Sanitización y fumigación', 'Emisión de certificado de lavado']) },
+  { title: 'Proceso: Certificación', steps: createSteps(['Verificación de limpieza con lámpara UV (si aplica)', 'Emisión de certificado de lavado y sanitización.']) },
+  COMMON_STEPS.INSPECTION,
 ];
 
 export const CHECKLIST_TOLVA: ChecklistSection[] = [
   COMMON_STEPS.RECEPTION,
   COMMON_STEPS.PREWASH,
-  { ...COMMON_STEPS.WASH, steps: [...COMMON_STEPS.WASH.steps, {id: 'desincrustante', label: 'Aplicación de desincrustante'}] },
-  { title: '4. Interior', steps: createSteps(['Procedimiento Específico: Limpieza Interior']) },
+  { ...COMMON_STEPS.WASH, steps: [...COMMON_STEPS.WASH.steps, {id: 'desincrustante-tolva', label: 'Aplicación de desincrustante para cemento/residuos'}] },
+  { title: 'Proceso: Limpieza Interior de Tolva', steps: createSteps([
+      'Apertura de válvulas y soplado de residuos con aire a presión.',
+      'Lavado interior a alta presión para desprender material adherido.',
+      'Inspección visual para asegurar que no queden residuos.'
+    ]) 
+  },
   COMMON_STEPS.ENJUAGUE,
   COMMON_STEPS.SECADO,
   COMMON_STEPS.CABINA,
+  COMMON_STEPS.INSPECTION,
 ];
 
 export const CHECKLIST_PLATAFORMA: ChecklistSection[] = [
   COMMON_STEPS.RECEPTION,
   COMMON_STEPS.PREWASH,
   COMMON_STEPS.WASH,
+  { title: 'Proceso: Lavado de Plataforma', steps: createSteps([
+      'Atención especial al lavado de la superficie de carga.',
+      'Limpieza de cadenas, ganchos y puntos de anclaje.',
+      'Desengrasado de áreas con residuos de aceite o grasa.'
+  ]) },
   COMMON_STEPS.ENJUAGUE,
   COMMON_STEPS.SECADO,
   COMMON_STEPS.CABINA,
+  COMMON_STEPS.INSPECTION,
 ];
 
 export const CHECKLIST_CISTERNA: ChecklistSection[] = [
     COMMON_STEPS.RECEPTION,
     COMMON_STEPS.PREWASH,
-    { ...COMMON_STEPS.WASH, steps: [...COMMON_STEPS.WASH.steps, { id: 'desincrustante', label: 'Aplicación de desincrustante' }] },
-    { title: '4. Interior', steps: createSteps(['Vaporización y Desgasificación', 'Procedimiento Específico: Limpieza Interior']) },
+    { ...COMMON_STEPS.WASH, steps: [...COMMON_STEPS.WASH.steps, { id: 'desincrustante-cisterna', label: 'Aplicación de desincrustante específico para el producto transportado' }] },
+    { title: 'Proceso: Lavado Exterior de Cisterna', steps: createSteps([
+        'Limpieza detallada de domos, válvulas de descarga y conexiones.',
+        'Cepillado de pasarelas y escaleras.',
+        'Pulido de áreas de acero inoxidable o aluminio (si se solicita).',
+    ]) },
     COMMON_STEPS.ENJUAGUE,
     COMMON_STEPS.SECADO,
     COMMON_STEPS.CABINA,
-    { title: '8. Certificación', steps: createSteps(['Medición de gases', 'Emisión de certificado de lavado']) },
+    COMMON_STEPS.INSPECTION,
 ];
+
 
 export const CHECKLIST_MAPPING: Record<TrailerType, ChecklistSection[] | null> = {
     'Caja Estándar': CHECKLIST_TRACTOR_CAJASECA,
